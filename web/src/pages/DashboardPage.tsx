@@ -5,7 +5,7 @@ import { VideoList } from '@/components/videos/VideoList'
 export function DashboardPage() {
   return (
     <Layout>
-      <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12">
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="mt-2 text-muted-foreground">
           Manage your videos and share links

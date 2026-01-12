@@ -1,15 +1,38 @@
 @import "tailwindcss";
 
 @theme {
+  /* Core colors - black/white minimalist */
   --color-background: #ffffff;
   --color-foreground: #0a0a0a;
-  --color-muted: #f5f5f5;
-  --color-muted-foreground: #737373;
-  --color-border: #e5e5e5;
+
+  /* Card surfaces */
+  --color-card: #ffffff;
+  --color-card-foreground: #0a0a0a;
+
+  /* Primary action color */
   --color-primary: #0a0a0a;
   --color-primary-foreground: #fafafa;
+
+  /* Secondary/muted surfaces */
+  --color-secondary: #f5f5f5;
+  --color-secondary-foreground: #0a0a0a;
+  --color-muted: #f5f5f5;
+  --color-muted-foreground: #737373;
+
+  /* Accent for hover states */
+  --color-accent: #f5f5f5;
+  --color-accent-foreground: #0a0a0a;
+
+  /* Destructive/error states */
   --color-destructive: #ef4444;
   --color-destructive-foreground: #fafafa;
+
+  /* Borders and inputs */
+  --color-border: #e5e5e5;
+  --color-input: #e5e5e5;
+  --color-ring: #0a0a0a;
+
+  /* Border radius scale */
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
@@ -22,5 +45,62 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+@layer utilities {
+  /* Mobile responsive utilities */
+  .mobile-card {
+    @apply p-3 sm:p-4;
+  }
+  .mobile-card-lg {
+    @apply p-4 sm:p-6;
+  }
+  .mobile-card-xl {
+    @apply p-4 sm:p-8;
+  }
+  .mobile-px {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+  .mobile-py {
+    @apply py-4 sm:py-6;
+  }
+
+  /* Card interaction states */
+  .card-hover {
+    @apply transition-all hover:shadow-md hover:border-primary/20;
+  }
+  .card-interactive {
+    @apply transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer;
+  }
+
+  /* Touch-friendly targets */
+  .btn-touch {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Responsive grids */
+  .grid-mobile-1 {
+    @apply grid-cols-1;
+  }
+  .grid-mobile-2 {
+    @apply grid-cols-1 sm:grid-cols-2;
+  }
+  .grid-mobile-3 {
+    @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
+  /* Text utilities */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 }

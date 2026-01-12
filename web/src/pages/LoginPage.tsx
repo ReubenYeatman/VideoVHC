@@ -9,8 +9,10 @@ export function LoginPage() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="mx-auto max-w-md px-4 py-12">
+          <div className="flex justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
         </div>
       </Layout>
     )
@@ -22,7 +24,7 @@ export function LoginPage() {
 
   return (
     <Layout>
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">
+      <div className="mx-auto max-w-md px-4 py-12">
         <LoginForm />
       </div>
     </Layout>
