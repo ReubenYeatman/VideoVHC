@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - dev
     paths:
       - 'db/migrations/**'
   workflow_dispatch:
@@ -11,16 +12,17 @@ on:
       environment:
         description: 'Environment to run migrations on'
         required: true
-        default: 'production'
+        default: 'dev'
         type: choice
         options:
+          - dev
           - production
 
 jobs:
   migrate:
     name: Run Migrations
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'dev' }}
 
     steps:
       - name: Checkout code
@@ -40,11 +42,11 @@ jobs:
       - name: Run migrations
         working-directory: db
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ github.ref == 'refs/heads/main' && secrets.DATABASE_URL_PROD || secrets.DATABASE_URL_DEV }}
         run: npx sequelize-cli db:migrate
 
       - name: Migration status
         working-directory: db
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ github.ref == 'refs/heads/main' && secrets.DATABASE_URL_PROD || secrets.DATABASE_URL_DEV }}
         run: npx sequelize-cli db:migrate:status
