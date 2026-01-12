@@ -1,2 +1,2 @@
 # VideoVHC
-This will allow people to easily upload vide
+This will allow people to easily upload video VHCs
