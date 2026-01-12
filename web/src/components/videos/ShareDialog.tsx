@@ -17,7 +17,6 @@ export function ShareDialog({ video, onClose }: ShareDialogProps) {
   const toggleShare = useToggleShare()
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
 
-  const activeShares = video.shares.filter((s) => s.is_active)
   const directUrl = getVideoPublicUrl(video.storage_path)
 
   const handleCreateShare = async () => {
