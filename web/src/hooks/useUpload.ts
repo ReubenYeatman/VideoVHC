@@ -80,7 +80,6 @@ export function useUpload(): UseUploadReturn {
         user_id: user.id,
         title,
         description: description || null,
-        filename: file.name,
         storage_path: storagePath,
         file_size: file.size,
         mime_type: file.type,
