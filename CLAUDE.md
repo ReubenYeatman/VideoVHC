@@ -9,6 +9,27 @@ ClipVault is a video hosting platform that provides embeddable URLs compatible w
 - **Database Migrations**: Sequelize CLI
 - **Deployment**: Render (static site)
 
+## Git Workflow - IMPORTANT
+
+**ALWAYS work on the `dev` branch. NEVER commit directly to `main`.**
+
+- All development work happens on `dev`
+- Create PRs from `dev` to `main` for production releases
+- GitHub Actions migrations only run when PRs are merged to `main`
+
+```bash
+# Ensure you're on dev before making changes
+git checkout dev
+```
+
+## Supabase Branch Workflow
+
+**ALWAYS use the Supabase dev branch for development.**
+
+- Dev branch project ref: `dfrtuwdhsliesokydwmd`
+- Use Supabase MCP tools for querying/exploring the dev branch
+- Migrations go through Sequelize files, NOT the MCP `apply_migration` tool
+
 ## Database Migrations - IMPORTANT
 
 ### Always Use Sequelize for Migrations
