@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase, VIDEOS_BUCKET } from '@/lib/supabase'
+import { supabase, VIDEOS_BUCKET, getVideoPublicUrl } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -11,6 +11,7 @@ interface UploadProgress {
 
 interface UploadResult {
   videoId: string
+  videoUrl: string
   shareUrl: string
   shareCode: string
 }
@@ -106,11 +107,12 @@ export function useUpload(): UseUploadReturn {
       // Refresh videos list
       queryClient.invalidateQueries({ queryKey: ['videos'] })
 
-      // Build the shareable URL
+      // Build URLs
+      const videoUrl = getVideoPublicUrl(storagePath)
       const shareCode = shareData || ''
       const shareUrl = shareCode ? `${window.location.origin}/v/${shareCode}` : ''
 
-      return { videoId, shareUrl, shareCode }
+      return { videoId, videoUrl, shareUrl, shareCode }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
       return null
