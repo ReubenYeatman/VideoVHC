@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase, VIDEOS_BUCKET, getVideoPublicUrl } from '@/lib/supabase'
+import { supabase, VIDEOS_BUCKET } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -11,7 +11,8 @@ interface UploadProgress {
 
 interface UploadResult {
   videoId: string
-  publicUrl: string
+  shareUrl: string
+  shareCode: string
 }
 
 interface UseUploadReturn {
@@ -92,12 +93,24 @@ export function useUpload(): UseUploadReturn {
         throw dbError
       }
 
+      // Auto-create a share for the uploaded video
+      const { data: shareData, error: shareError } = await supabase.rpc('create_share', {
+        p_video_id: videoId,
+      })
+
+      if (shareError) {
+        // Video uploaded but share creation failed - not critical, user can create later
+        console.error('Failed to create share:', shareError)
+      }
+
       // Refresh videos list
       queryClient.invalidateQueries({ queryKey: ['videos'] })
 
-      // Return the video info
-      const publicUrl = getVideoPublicUrl(storagePath)
-      return { videoId, publicUrl }
+      // Build the shareable URL
+      const shareCode = shareData || ''
+      const shareUrl = shareCode ? `${window.location.origin}/v/${shareCode}` : ''
+
+      return { videoId, shareUrl, shareCode }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
       return null

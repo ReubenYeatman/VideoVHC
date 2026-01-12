@@ -48,14 +48,20 @@ export function VideoUploader() {
 
     const result = await upload(selectedFile, title.trim(), description.trim() || undefined)
 
-    // On success, copy URL to clipboard and show notification
-    if (result) {
+    // On success, copy shareable URL to clipboard and show notification
+    if (result && result.shareUrl) {
       try {
-        await navigator.clipboard.writeText(result.publicUrl)
-        setCopiedUrl(result.publicUrl)
+        await navigator.clipboard.writeText(result.shareUrl)
+        setCopiedUrl(result.shareUrl)
       } catch {
-        // Clipboard API might fail in some contexts, just continue
+        // Clipboard API might fail in some contexts, still show the URL
+        setCopiedUrl(result.shareUrl)
       }
+      setSelectedFile(null)
+      setTitle('')
+      setDescription('')
+    } else if (result) {
+      // Upload succeeded but no share URL - just clear form
       setSelectedFile(null)
       setTitle('')
       setDescription('')
