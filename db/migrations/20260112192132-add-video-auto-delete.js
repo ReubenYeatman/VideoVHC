@@ -15,25 +15,23 @@ module.exports = {
       RETURNS void
       LANGUAGE plpgsql
       SECURITY DEFINER
-      SET search_path = public
+      SET search_path = public, storage
       AS $$
       DECLARE
         old_video RECORD;
       BEGIN
-        -- Find videos older than 30 days
         FOR old_video IN
-          SELECT id, storage_path, user_id
+          SELECT id, storage_path
           FROM public.videos
           WHERE created_at < NOW() - INTERVAL '30 days'
         LOOP
-          -- Delete associated shares first (cascade should handle this, but being explicit)
-          DELETE FROM public.shares WHERE video_id = old_video.id;
+          -- Delete from storage.objects (removes the actual file)
+          DELETE FROM storage.objects
+          WHERE bucket_id = 'videos'
+          AND name = old_video.storage_path;
 
-          -- Delete the video record (this will trigger storage cleanup via app or we handle separately)
+          -- Delete the video record (cascades to shares)
           DELETE FROM public.videos WHERE id = old_video.id;
-
-          -- Log the deletion
-          RAISE NOTICE 'Deleted video % with storage path %', old_video.id, old_video.storage_path;
         END LOOP;
       END;
       $$;
