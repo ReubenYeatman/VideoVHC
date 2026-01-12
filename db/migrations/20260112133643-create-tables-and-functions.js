@@ -1,7 +1,7 @@
 'use strict';
 
 /** @type {import('sequelize-cli').Migration} */
-// ClipVault initial schema
+// ClipVault initial schema - v1.0
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.sequelize.query(`
