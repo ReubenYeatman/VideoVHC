@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, X, FileVideo, Check } from 'lucide-react'
+import { Upload, X, FileVideo, Check, Copy } from 'lucide-react'
 import { useUpload } from '@/hooks/useUpload'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,11 +13,15 @@ export function VideoUploader() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
+  const [autoCopied, setAutoCopied] = useState(false)
 
-  // Auto-hide the copied notification after 4 seconds
+  // Auto-hide the copied notification after 6 seconds
   useEffect(() => {
     if (copiedUrl) {
-      const timer = setTimeout(() => setCopiedUrl(null), 4000)
+      const timer = setTimeout(() => {
+        setCopiedUrl(null)
+        setAutoCopied(false)
+      }, 6000)
       return () => clearTimeout(timer)
     }
   }, [copiedUrl])
@@ -48,15 +52,17 @@ export function VideoUploader() {
 
     const result = await upload(selectedFile, title.trim(), description.trim() || undefined)
 
-    // On success, copy shareable URL to clipboard and show notification
+    // On success, try to copy shareable URL to clipboard and show notification
     if (result && result.shareUrl) {
+      let copied = false
       try {
         await navigator.clipboard.writeText(result.shareUrl)
-        setCopiedUrl(result.shareUrl)
+        copied = true
       } catch {
-        // Clipboard API might fail in some contexts, still show the URL
-        setCopiedUrl(result.shareUrl)
+        // Clipboard API might fail in some contexts
       }
+      setCopiedUrl(result.shareUrl)
+      setAutoCopied(copied)
       setSelectedFile(null)
       setTitle('')
       setDescription('')
@@ -83,11 +89,31 @@ export function VideoUploader() {
         {/* Success notification */}
         {copiedUrl && (
           <div className="flex items-center gap-3 rounded-md bg-primary/10 p-3 text-sm">
-            <Check className="h-5 w-5 text-primary" />
-            <div className="flex-1">
-              <p className="font-medium">Link copied to clipboard!</p>
+            <Check className="h-5 w-5 shrink-0 text-primary" />
+            <div className="min-w-0 flex-1">
+              <p className="font-medium">
+                {autoCopied ? 'Link copied to clipboard!' : 'Video uploaded!'}
+              </p>
               <p className="mt-0.5 truncate text-xs text-muted-foreground">{copiedUrl}</p>
             </div>
+            {!autoCopied && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="shrink-0"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(copiedUrl)
+                    setAutoCopied(true)
+                  } catch {
+                    // Still failed, user can manually copy
+                  }
+                }}
+              >
+                <Copy className="mr-1 h-3 w-3" />
+                Copy
+              </Button>
+            )}
           </div>
         )}
 
