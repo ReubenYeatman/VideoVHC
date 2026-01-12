@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase, VIDEOS_BUCKET } from '@/lib/supabase'
+import { supabase, VIDEOS_BUCKET, getVideoPublicUrl } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -9,8 +9,13 @@ interface UploadProgress {
   percentage: number
 }
 
+interface UploadResult {
+  videoId: string
+  publicUrl: string
+}
+
 interface UseUploadReturn {
-  upload: (file: File, title: string, description?: string) => Promise<void>
+  upload: (file: File, title: string, description?: string) => Promise<UploadResult | null>
   uploading: boolean
   progress: UploadProgress | null
   error: string | null
@@ -26,22 +31,22 @@ export function useUpload(): UseUploadReturn {
   const [progress, setProgress] = useState<UploadProgress | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const upload = async (file: File, title: string, description?: string) => {
+  const upload = async (file: File, title: string, description?: string): Promise<UploadResult | null> => {
     if (!user) {
       setError('You must be logged in to upload')
-      return
+      return null
     }
 
     // Validate file type
     if (!ALLOWED_TYPES.includes(file.type)) {
       setError('Only MP4 and MOV files are allowed')
-      return
+      return null
     }
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       setError('File size must be less than 50MB')
-      return
+      return null
     }
 
     setUploading(true)
@@ -90,8 +95,13 @@ export function useUpload(): UseUploadReturn {
 
       // Refresh videos list
       queryClient.invalidateQueries({ queryKey: ['videos'] })
+
+      // Return the video info
+      const publicUrl = getVideoPublicUrl(storagePath)
+      return { videoId, publicUrl }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
+      return null
     } finally {
       setUploading(false)
       setProgress(null)
