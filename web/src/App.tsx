@@ -4,6 +4,7 @@ import { AuthProvider } from '@/context/AuthContext'
 import { AuthGuard } from '@/components/auth/AuthGuard'
 import { LoginPage } from '@/pages/LoginPage'
 import { DashboardPage } from '@/pages/DashboardPage'
+import { AllVideosPage } from '@/pages/AllVideosPage'
 import { PlayerPage } from '@/pages/PlayerPage'
 
 const queryClient = new QueryClient({
@@ -28,6 +29,7 @@ function App() {
             {/* Protected routes */}
             <Route element={<AuthGuard />}>
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/videos" element={<AllVideosPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

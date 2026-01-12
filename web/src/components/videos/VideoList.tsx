@@ -2,8 +2,13 @@ import { useVideos } from '@/hooks/useVideos'
 import { VideoCard } from './VideoCard'
 import { FileVideo } from 'lucide-react'
 
-export function VideoList() {
-  const { data: videos, isLoading, error } = useVideos()
+interface VideoListProps {
+  daysFilter?: number
+  emptyMessage?: string
+}
+
+export function VideoList({ daysFilter, emptyMessage }: VideoListProps) {
+  const { data: videos, isLoading, error } = useVideos({ daysFilter })
 
   if (isLoading) {
     return (
@@ -25,7 +30,9 @@ export function VideoList() {
     return (
       <div className="py-12 text-center">
         <FileVideo className="mx-auto h-12 w-12 text-muted-foreground" />
-        <h3 className="mt-4 text-lg font-semibold">No videos yet</h3>
+        <h3 className="mt-4 text-lg font-semibold">
+          {emptyMessage || 'No videos yet'}
+        </h3>
         <p className="mt-2 text-sm text-muted-foreground">
           Upload your first video to get started
         </p>
