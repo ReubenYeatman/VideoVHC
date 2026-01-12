@@ -74,8 +74,17 @@ All database schema changes MUST be done through Sequelize migration files:
 ```
 VITE_SUPABASE_URL=https://<project-ref>.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon-key>
-DATABASE_URL=postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres
+
+# For migrations - use DIRECT connection (port 5432)
+DATABASE_URL=postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres
 ```
+
+### Getting the DATABASE_URL
+1. Go to Supabase Dashboard → Project → Settings → Database
+2. Scroll to "Connection string" section
+3. Select "URI" tab
+4. Copy the **Direct connection** string (port 5432, NOT 6543)
+5. The transaction pooler (6543) won't work for migrations
 
 ### Storage Bucket
 - Bucket name: `videos`
