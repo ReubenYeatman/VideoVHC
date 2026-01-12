@@ -52,18 +52,18 @@ export function VideoUploader() {
 
     const result = await upload(selectedFile, title.trim(), description.trim() || undefined)
 
-    // On success, try to copy shareable URL to clipboard and show notification
-    if (result && result.shareUrl) {
+    // On success, try to copy direct video URL to clipboard and show notification
+    if (result && result.videoUrl) {
       let copied = false
       try {
         // Try modern clipboard API first
-        await navigator.clipboard.writeText(result.shareUrl)
+        await navigator.clipboard.writeText(result.videoUrl)
         copied = true
       } catch {
         // Fallback to execCommand for better compatibility
         try {
           const textArea = document.createElement('textarea')
-          textArea.value = result.shareUrl
+          textArea.value = result.videoUrl
           textArea.style.position = 'fixed'
           textArea.style.left = '-9999px'
           document.body.appendChild(textArea)
@@ -74,7 +74,7 @@ export function VideoUploader() {
           // Both methods failed
         }
       }
-      setCopiedUrl(result.shareUrl)
+      setCopiedUrl(result.videoUrl)
       setAutoCopied(copied)
       setSelectedFile(null)
       setTitle('')
