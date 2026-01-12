@@ -1,0 +1,50 @@
+name: Database Migrations
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'db/migrations/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to run migrations on'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+
+jobs:
+  migrate:
+    name: Run Migrations
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'db/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: db
+        run: npm ci
+
+      - name: Run migrations
+        working-directory: db
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx sequelize-cli db:migrate
+
+      - name: Migration status
+        working-directory: db
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx sequelize-cli db:migrate:status

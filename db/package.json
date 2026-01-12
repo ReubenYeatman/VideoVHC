@@ -1,0 +1,19 @@
+{
+  "name": "clipvault-db",
+  "version": "1.0.0",
+  "description": "Database migrations for ClipVault",
+  "scripts": {
+    "migrate": "sequelize-cli db:migrate",
+    "migrate:undo": "sequelize-cli db:migrate:undo",
+    "migrate:undo:all": "sequelize-cli db:migrate:undo:all",
+    "migrate:status": "sequelize-cli db:migrate:status",
+    "migration:create": "sequelize-cli migration:generate --name"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "pg": "^8.13.1",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.5",
+    "sequelize-cli": "^6.6.2"
+  }
+}
