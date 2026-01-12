@@ -52,6 +52,20 @@ module.exports = {
       ALTER TABLE public.videos ENABLE ROW LEVEL SECURITY;
       ALTER TABLE public.shares ENABLE ROW LEVEL SECURITY;
 
+      -- Drop existing policies if they exist (for idempotency)
+      DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
+      DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+      DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
+      DROP POLICY IF EXISTS "Users can view own videos" ON public.videos;
+      DROP POLICY IF EXISTS "Users can insert own videos" ON public.videos;
+      DROP POLICY IF EXISTS "Users can update own videos" ON public.videos;
+      DROP POLICY IF EXISTS "Users can delete own videos" ON public.videos;
+      DROP POLICY IF EXISTS "Users can view own shares" ON public.shares;
+      DROP POLICY IF EXISTS "Users can insert shares for own videos" ON public.shares;
+      DROP POLICY IF EXISTS "Users can update own shares" ON public.shares;
+      DROP POLICY IF EXISTS "Users can delete own shares" ON public.shares;
+      DROP POLICY IF EXISTS "Public can view active shares" ON public.shares;
+
       -- Profiles policies
       CREATE POLICY "Users can view own profile" ON public.profiles
         FOR SELECT USING (auth.uid() = id);
