@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, X, FileVideo } from 'lucide-react'
+import { Upload, X, FileVideo, Check } from 'lucide-react'
 import { useUpload } from '@/hooks/useUpload'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +12,15 @@ export function VideoUploader() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
+
+  // Auto-hide the copied notification after 4 seconds
+  useEffect(() => {
+    if (copiedUrl) {
+      const timer = setTimeout(() => setCopiedUrl(null), 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [copiedUrl])
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0]
@@ -37,10 +46,16 @@ export function VideoUploader() {
   const handleUpload = async () => {
     if (!selectedFile || !title.trim()) return
 
-    await upload(selectedFile, title.trim(), description.trim() || undefined)
+    const result = await upload(selectedFile, title.trim(), description.trim() || undefined)
 
-    // Clear form on success
-    if (!error) {
+    // On success, copy URL to clipboard and show notification
+    if (result) {
+      try {
+        await navigator.clipboard.writeText(result.publicUrl)
+        setCopiedUrl(result.publicUrl)
+      } catch {
+        // Clipboard API might fail in some contexts, just continue
+      }
       setSelectedFile(null)
       setTitle('')
       setDescription('')
@@ -59,6 +74,17 @@ export function VideoUploader() {
         <CardTitle>Upload Video</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Success notification */}
+        {copiedUrl && (
+          <div className="flex items-center gap-3 rounded-md bg-primary/10 p-3 text-sm">
+            <Check className="h-5 w-5 text-primary" />
+            <div className="flex-1">
+              <p className="font-medium">Link copied to clipboard!</p>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">{copiedUrl}</p>
+            </div>
+          </div>
+        )}
+
         {!selectedFile ? (
           <div
             {...getRootProps()}
