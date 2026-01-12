@@ -56,10 +56,23 @@ export function VideoUploader() {
     if (result && result.shareUrl) {
       let copied = false
       try {
+        // Try modern clipboard API first
         await navigator.clipboard.writeText(result.shareUrl)
         copied = true
       } catch {
-        // Clipboard API might fail in some contexts
+        // Fallback to execCommand for better compatibility
+        try {
+          const textArea = document.createElement('textarea')
+          textArea.value = result.shareUrl
+          textArea.style.position = 'fixed'
+          textArea.style.left = '-9999px'
+          document.body.appendChild(textArea)
+          textArea.select()
+          copied = document.execCommand('copy')
+          document.body.removeChild(textArea)
+        } catch {
+          // Both methods failed
+        }
       }
       setCopiedUrl(result.shareUrl)
       setAutoCopied(copied)
@@ -101,13 +114,26 @@ export function VideoUploader() {
                 variant="ghost"
                 size="sm"
                 className="shrink-0"
-                onClick={async () => {
+                onClick={() => {
+                  let copied = false
                   try {
-                    await navigator.clipboard.writeText(copiedUrl)
-                    setAutoCopied(true)
+                    navigator.clipboard.writeText(copiedUrl)
+                    copied = true
                   } catch {
-                    // Still failed, user can manually copy
+                    try {
+                      const textArea = document.createElement('textarea')
+                      textArea.value = copiedUrl
+                      textArea.style.position = 'fixed'
+                      textArea.style.left = '-9999px'
+                      document.body.appendChild(textArea)
+                      textArea.select()
+                      copied = document.execCommand('copy')
+                      document.body.removeChild(textArea)
+                    } catch {
+                      // Both methods failed
+                    }
                   }
+                  if (copied) setAutoCopied(true)
                 }}
               >
                 <Copy className="mr-1 h-3 w-3" />
