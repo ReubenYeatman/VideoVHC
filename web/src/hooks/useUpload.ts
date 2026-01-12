@@ -12,8 +12,6 @@ interface UploadProgress {
 interface UploadResult {
   videoId: string
   videoUrl: string
-  shareUrl: string
-  shareCode: string
 }
 
 interface UseUploadReturn {
@@ -94,25 +92,13 @@ export function useUpload(): UseUploadReturn {
         throw dbError
       }
 
-      // Auto-create a share for the uploaded video
-      const { data: shareData, error: shareError } = await supabase.rpc('create_share', {
-        p_video_id: videoId,
-      })
-
-      if (shareError) {
-        // Video uploaded but share creation failed - not critical, user can create later
-        console.error('Failed to create share:', shareError)
-      }
-
       // Refresh videos list
       queryClient.invalidateQueries({ queryKey: ['videos'] })
 
-      // Build URLs
+      // Build direct video URL
       const videoUrl = getVideoPublicUrl(storagePath)
-      const shareCode = shareData || ''
-      const shareUrl = shareCode ? `${window.location.origin}/v/${shareCode}` : ''
 
-      return { videoId, videoUrl, shareUrl, shareCode }
+      return { videoId, videoUrl }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
       return null
