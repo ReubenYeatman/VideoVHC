@@ -92,6 +92,16 @@ export function useUpload(): UseUploadReturn {
         throw dbError
       }
 
+      // Auto-create a share for the uploaded video
+      const { error: shareError } = await supabase.rpc('create_share', {
+        p_video_id: videoId,
+      })
+
+      if (shareError) {
+        // Video uploaded but share creation failed - not critical, user can create later
+        console.error('Failed to create share:', shareError)
+      }
+
       // Refresh videos list
       queryClient.invalidateQueries({ queryKey: ['videos'] })
 
