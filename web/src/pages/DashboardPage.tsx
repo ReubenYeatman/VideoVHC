@@ -1,6 +1,9 @@
+import { Link } from 'react-router-dom'
 import { Layout } from '@/components/layout/Layout'
 import { VideoUploader } from '@/components/videos/VideoUploader'
 import { VideoList } from '@/components/videos/VideoList'
+import { Button } from '@/components/ui/button'
+import { ChevronRight } from 'lucide-react'
 
 export function DashboardPage() {
   return (
@@ -16,8 +19,16 @@ export function DashboardPage() {
             <VideoUploader />
           </div>
           <div className="lg:col-span-2">
-            <h2 className="mb-4 text-xl font-semibold">Your Videos</h2>
-            <VideoList />
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Last 7 Days</h2>
+              <Link to="/videos">
+                <Button variant="ghost" size="sm">
+                  View All
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+            <VideoList daysFilter={7} emptyMessage="No videos in the last 7 days" />
           </div>
         </div>
       </div>

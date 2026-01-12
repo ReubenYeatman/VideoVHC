@@ -2,16 +2,35 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase, VIDEOS_BUCKET } from '@/lib/supabase'
 import type { Video, Share, VideoWithShares } from '@/lib/types'
 
-export function useVideos() {
+interface UseVideosOptions {
+  daysFilter?: number // Filter to videos from last N days
+}
+
+export function useVideos(options: UseVideosOptions = {}) {
+  const { daysFilter } = options
+
   return useQuery({
-    queryKey: ['videos'],
+    queryKey: ['videos', { daysFilter }],
     queryFn: async (): Promise<VideoWithShares[]> => {
-      const { data: videos, error: videosError } = await supabase
+      let query = supabase
         .from('videos')
         .select('*')
         .order('created_at', { ascending: false })
 
+      // Apply date filter if specified
+      if (daysFilter) {
+        const cutoffDate = new Date()
+        cutoffDate.setDate(cutoffDate.getDate() - daysFilter)
+        query = query.gte('created_at', cutoffDate.toISOString())
+      }
+
+      const { data: videos, error: videosError } = await query
+
       if (videosError) throw videosError
+
+      if (videos.length === 0) {
+        return []
+      }
 
       // Get shares for all videos
       const videoIds = videos.map((v: Video) => v.id)
