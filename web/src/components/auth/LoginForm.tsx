@@ -2,90 +2,312 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useAuth } from '@/context/AuthContext'
+import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-const authSchema = z.object({
+const signInSchema = z.object({
   email: z.string().email('Please enter a valid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 })
 
-type AuthFormData = z.infer<typeof authSchema>
+const signUpSchema = z
+  .object({
+    email: z.string().email('Please enter a valid email'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  })
+
+const otpSchema = z.object({
+  token: z.string().length(6, 'Code must be 6 digits'),
+})
+
+type SignInFormData = z.infer<typeof signInSchema>
+type SignUpFormData = z.infer<typeof signUpSchema>
+type OtpFormData = z.infer<typeof otpSchema>
+
+type FormStep = 'signIn' | 'signUp' | 'verify'
 
 export function LoginForm() {
-  const { signIn, signUp } = useAuth()
-  const [isSignUp, setIsSignUp] = useState(false)
+  const [step, setStep] = useState<FormStep>('signIn')
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<AuthFormData>({
-    resolver: zodResolver(authSchema),
+  const signInForm = useForm<SignInFormData>({
+    resolver: zodResolver(signInSchema),
   })
 
-  const onSubmit = async (data: AuthFormData) => {
-    setError(null)
-    setSuccess(null)
+  const signUpForm = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+  })
 
-    if (isSignUp) {
-      const { error } = await signUp(data.email, data.password)
-      if (error) {
-        setError(error.message)
-      } else {
-        setSuccess('Check your email for a confirmation link!')
-      }
-    } else {
-      const { error } = await signIn(data.email, data.password)
-      if (error) {
-        setError(error.message)
-      }
+  const otpForm = useForm<OtpFormData>({
+    resolver: zodResolver(otpSchema),
+  })
+
+  const handleSignIn = async (data: SignInFormData) => {
+    setError(null)
+    const { error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    })
+    if (error) {
+      setError(error.message)
     }
   }
 
+  const handleSignUp = async (data: SignUpFormData) => {
+    setError(null)
+    setSuccess(null)
+
+    const { error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      },
+    })
+
+    if (error) {
+      setError(error.message)
+    } else {
+      setPendingEmail(data.email)
+      setStep('verify')
+      setSuccess('We sent a 6-digit code to your email. Enter it below to verify your account.')
+    }
+  }
+
+  const handleVerifyOtp = async (data: OtpFormData) => {
+    if (!pendingEmail) return
+    setError(null)
+
+    const { error } = await supabase.auth.verifyOtp({
+      email: pendingEmail,
+      token: data.token,
+      type: 'signup',
+    })
+
+    if (error) {
+      setError(error.message)
+    }
+  }
+
+  const resetToSignIn = () => {
+    setStep('signIn')
+    setPendingEmail(null)
+    setError(null)
+    setSuccess(null)
+    signInForm.reset()
+    signUpForm.reset()
+    otpForm.reset()
+  }
+
+  // OTP Verification Step
+  if (step === 'verify') {
+    return (
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Verify Your Email</CardTitle>
+          <CardDescription>
+            Enter the 6-digit code sent to {pendingEmail}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={otpForm.handleSubmit(handleVerifyOtp)} className="space-y-4">
+            {success && (
+              <div className="rounded-md bg-green-500/10 p-3 text-sm text-green-600">
+                {success}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label htmlFor="token" className="text-sm font-medium">
+                Verification Code
+              </label>
+              <Input
+                id="token"
+                type="text"
+                inputMode="numeric"
+                placeholder="123456"
+                maxLength={6}
+                {...otpForm.register('token')}
+              />
+              {otpForm.formState.errors.token && (
+                <p className="text-sm text-destructive">
+                  {otpForm.formState.errors.token.message}
+                </p>
+              )}
+            </div>
+
+            {error && (
+              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={otpForm.formState.isSubmitting}
+            >
+              {otpForm.formState.isSubmitting ? 'Verifying...' : 'Verify Email'}
+            </Button>
+
+            <div className="text-center text-sm">
+              <button
+                type="button"
+                onClick={resetToSignIn}
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                Back to Sign In
+              </button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Sign Up Step
+  if (step === 'signUp') {
+    return (
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Create Account</CardTitle>
+          <CardDescription>Enter your details to create an account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={signUpForm.handleSubmit(handleSignUp)} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="signup-email" className="text-sm font-medium">
+                Email
+              </label>
+              <Input
+                id="signup-email"
+                type="email"
+                placeholder="you@example.com"
+                {...signUpForm.register('email')}
+              />
+              {signUpForm.formState.errors.email && (
+                <p className="text-sm text-destructive">
+                  {signUpForm.formState.errors.email.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="signup-password" className="text-sm font-medium">
+                Password
+              </label>
+              <Input
+                id="signup-password"
+                type="password"
+                placeholder="••••••••"
+                {...signUpForm.register('password')}
+              />
+              {signUpForm.formState.errors.password && (
+                <p className="text-sm text-destructive">
+                  {signUpForm.formState.errors.password.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="signup-confirm" className="text-sm font-medium">
+                Confirm Password
+              </label>
+              <Input
+                id="signup-confirm"
+                type="password"
+                placeholder="••••••••"
+                {...signUpForm.register('confirmPassword')}
+              />
+              {signUpForm.formState.errors.confirmPassword && (
+                <p className="text-sm text-destructive">
+                  {signUpForm.formState.errors.confirmPassword.message}
+                </p>
+              )}
+            </div>
+
+            {error && (
+              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={signUpForm.formState.isSubmitting}
+            >
+              {signUpForm.formState.isSubmitting ? 'Creating Account...' : 'Create Account'}
+            </Button>
+
+            <div className="text-center text-sm">
+              Already have an account?{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('signIn')
+                  setError(null)
+                }}
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                Sign In
+              </button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Sign In Step (default)
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>{isSignUp ? 'Create Account' : 'Sign In'}</CardTitle>
-        <CardDescription>
-          {isSignUp
-            ? 'Enter your email to create an account'
-            : 'Enter your credentials to access your videos'}
-        </CardDescription>
+        <CardTitle>Sign In</CardTitle>
+        <CardDescription>Enter your credentials to access your videos</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={signInForm.handleSubmit(handleSignIn)} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
+            <label htmlFor="signin-email" className="text-sm font-medium">
               Email
             </label>
             <Input
-              id="email"
+              id="signin-email"
               type="email"
               placeholder="you@example.com"
-              {...register('email')}
+              {...signInForm.register('email')}
             />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
+            {signInForm.formState.errors.email && (
+              <p className="text-sm text-destructive">
+                {signInForm.formState.errors.email.message}
+              </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
+            <label htmlFor="signin-password" className="text-sm font-medium">
               Password
             </label>
             <Input
-              id="password"
+              id="signin-password"
               type="password"
               placeholder="••••••••"
-              {...register('password')}
+              {...signInForm.register('password')}
             />
-            {errors.password && (
-              <p className="text-sm text-destructive">{errors.password.message}</p>
+            {signInForm.formState.errors.password && (
+              <p className="text-sm text-destructive">
+                {signInForm.formState.errors.password.message}
+              </p>
             )}
           </div>
 
@@ -95,28 +317,25 @@ export function LoginForm() {
             </div>
           )}
 
-          {success && (
-            <div className="rounded-md bg-green-500/10 p-3 text-sm text-green-600">
-              {success}
-            </div>
-          )}
-
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={signInForm.formState.isSubmitting}
+          >
+            {signInForm.formState.isSubmitting ? 'Signing In...' : 'Sign In'}
           </Button>
 
           <div className="text-center text-sm">
-            {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+            Don't have an account?{' '}
             <button
               type="button"
               onClick={() => {
-                setIsSignUp(!isSignUp)
+                setStep('signUp')
                 setError(null)
-                setSuccess(null)
               }}
               className="text-primary underline-offset-4 hover:underline"
             >
-              {isSignUp ? 'Sign In' : 'Sign Up'}
+              Sign Up
             </button>
           </div>
         </form>
