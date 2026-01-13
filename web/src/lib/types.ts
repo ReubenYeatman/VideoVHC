@@ -3,6 +3,25 @@ export interface Profile {
   email: string | null
   display_name: string | null
   created_at: string
+  is_admin: boolean
+}
+
+export interface AdminUser {
+  id: string
+  email: string | null
+  display_name: string | null
+  created_at: string
+  is_admin: boolean
+  video_count: number
+  total_views: number
+}
+
+export interface AdminStats {
+  total_users: number
+  total_videos: number
+  total_shares: number
+  total_views: number
+  users: AdminUser[]
 }
 
 export interface Video {

@@ -185,26 +185,26 @@ export function VideoUploader() {
 
             <div className="space-y-2">
               <label htmlFor="title" className="text-sm font-medium">
-                Title *
+                Reg *
               </label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Video title"
+                placeholder="Registration number"
                 disabled={uploading}
               />
             </div>
 
             <div className="space-y-2">
               <label htmlFor="description" className="text-sm font-medium">
-                Description (optional)
+                Document Number (optional)
               </label>
               <Input
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Brief description"
+                placeholder="Document number"
                 disabled={uploading}
               />
             </div>
