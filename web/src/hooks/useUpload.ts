@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase, VIDEOS_BUCKET, getVideoPublicUrl } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useQueryClient } from '@tanstack/react-query'
+import { generateThumbnail } from '@/lib/utils'
 
 interface UploadProgress {
   loaded: number
@@ -74,6 +75,24 @@ export function useUpload(): UseUploadReturn {
       // Set progress to 100% after upload
       setProgress({ loaded: file.size, total: file.size, percentage: 100 })
 
+      // Generate and upload thumbnail
+      let thumbnailPath: string | null = null
+      const thumbnailBlob = await generateThumbnail(file)
+
+      if (thumbnailBlob) {
+        const thumbPath = `${user.id}/${videoId}/thumbnail.jpg`
+        const { error: thumbError } = await supabase.storage
+          .from(VIDEOS_BUCKET)
+          .upload(thumbPath, thumbnailBlob, {
+            cacheControl: '3600',
+            contentType: 'image/jpeg',
+          })
+
+        if (!thumbError) {
+          thumbnailPath = thumbPath
+        }
+      }
+
       // Create video record in database
       const { error: dbError } = await supabase.from('videos').insert({
         id: videoId,
@@ -81,14 +100,17 @@ export function useUpload(): UseUploadReturn {
         title,
         description: description || null,
         storage_path: storagePath,
+        thumbnail_path: thumbnailPath,
         file_size: file.size,
         mime_type: file.type,
         duration_seconds: duration,
       })
 
       if (dbError) {
-        // Rollback: delete uploaded file
-        await supabase.storage.from(VIDEOS_BUCKET).remove([storagePath])
+        // Rollback: delete video and thumbnail
+        const filesToDelete = [storagePath]
+        if (thumbnailPath) filesToDelete.push(thumbnailPath)
+        await supabase.storage.from(VIDEOS_BUCKET).remove(filesToDelete)
         throw dbError
       }
 

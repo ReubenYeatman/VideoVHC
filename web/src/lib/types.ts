@@ -31,6 +31,7 @@ export interface Video {
   description: string | null
   filename: string
   storage_path: string
+  thumbnail_path: string | null
   file_size: number | null
   mime_type: string | null
   duration_seconds: number | null
@@ -58,6 +59,7 @@ export interface PublicVideoData {
   title: string
   description: string | null
   storage_path: string
+  thumbnail_path: string | null
   duration_seconds: number | null
   share_id: string
   view_count: number

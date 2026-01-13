@@ -40,6 +40,17 @@ export function VideoCard({ video }: VideoCardProps) {
               autoPlay
               className="h-full w-full object-contain"
             />
+          ) : video.thumbnail_path ? (
+            <div className="group relative h-full w-full">
+              <img
+                src={getVideoPublicUrl(video.thumbnail_path)}
+                alt={video.title}
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
+                <Play className="h-12 w-12 text-white" />
+              </div>
+            </div>
           ) : (
             <div className="flex h-full items-center justify-center">
               <Play className="h-12 w-12 text-muted-foreground" />

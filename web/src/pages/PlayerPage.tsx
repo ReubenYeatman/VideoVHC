@@ -80,6 +80,7 @@ export function PlayerPage() {
       <div className="flex flex-1 items-center justify-center">
         <video
           src={videoUrl}
+          poster={video.thumbnail_path ? getVideoPublicUrl(video.thumbnail_path) : undefined}
           controls
           autoPlay
           className="max-h-[80vh] max-w-full"
