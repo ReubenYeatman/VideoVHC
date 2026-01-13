@@ -24,7 +24,7 @@ const signUpSchema = z
   })
 
 const otpSchema = z.object({
-  token: z.string().length(6, 'Code must be 6 digits'),
+  token: z.string().length(8, 'Code must be 8 digits'),
 })
 
 type SignInFormData = z.infer<typeof signInSchema>
@@ -79,7 +79,7 @@ export function LoginForm() {
     } else {
       setPendingEmail(data.email)
       setStep('verify')
-      setSuccess('We sent a 6-digit code to your email. Enter it below to verify your account.')
+      setSuccess('We sent an 8-digit code to your email. Enter it below to verify your account.')
     }
   }
 
@@ -115,7 +115,7 @@ export function LoginForm() {
         <CardHeader>
           <CardTitle>Verify Your Email</CardTitle>
           <CardDescription>
-            Enter the 6-digit code sent to {pendingEmail}
+            Enter the 8-digit code sent to {pendingEmail}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -134,8 +134,8 @@ export function LoginForm() {
                 id="token"
                 type="text"
                 inputMode="numeric"
-                placeholder="123456"
-                maxLength={6}
+                placeholder="12345678"
+                maxLength={8}
                 {...otpForm.register('token')}
               />
               {otpForm.formState.errors.token && (
