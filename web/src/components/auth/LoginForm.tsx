@@ -78,6 +78,8 @@ export function LoginForm() {
       setError(error.message)
     } else {
       setPendingEmail(data.email)
+      signUpForm.reset()
+      otpForm.reset()
       setStep('verify')
       setSuccess('We sent an 8-digit code to your email. Enter it below to verify your account.')
     }
